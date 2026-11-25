@@ -6,30 +6,51 @@ Inspect what your coding agents (**Claude Code**, **Codex CLI**, **OpenCode**, *
 
 ---
 
+## Screenshots
+
+### Overview & Quota Impact
+![Overview and Quota Impact](docs/screenshots/overview.png)
+
+### Step Board & Inspector
+![Step Board and Inspector](docs/screenshots/board.png)
+
+### Context Graph
+![Context Graph](docs/screenshots/context-graph.png)
+
+---
+
 ## Why `harness-replay`?
 
-Modern AI coding harnesses execute dozens of tool calls, read files repeatedly, and rely heavily on prompt caching to keep costs down. Terminal scrollback makes it hard to answer simple questions:
+Modern AI coding harnesses execute dozens of tool calls, read files repeatedly, and rely heavily on prompt caching to keep costs and rate-limit usage down. Terminal scrollback makes it hard to answer simple questions:
 
-- **How effective is prompt caching?** How many tokens and dollars did `cache_read` actually save in this session?
-- **Where are tokens being wasted?** Did the agent read the same large file 4 times in a single task?
-- **What happened at step 14?** Which tool call failed, how long did it take, and how much did that turn cost?
+- **How effective is prompt caching?** How many tokens, dollars, and 5-hour/7-day quota % did `cache_read` actually save in this session?
+- **Where are tokens being wasted?** Did the agent read the same large file multiple times, loop on a failing tool, or carry bloated context?
+- **What happened at step 14?** Which tool call failed, which files were touched, and how much did that turn cost?
 
-`harness-replay` parses `.jsonl` session transcripts locally in your browser and gives you a clean, inspectable replay timeline.
+`harness-replay` parses `.jsonl` session transcripts locally and gives you a fast, inspectable **Swarm Mission Control** UI.
 
 ## Features
 
-- **100% Local & Zero Telemetry:** No analytics, no auth-file fingerprinting, no remote servers. Drop a `.jsonl` file in the browser or explore built-in demo sessions.
-- **Multi-Harness Normalization:** Built-in parsers for Claude Code, Codex CLI, and generic/Antigravity JSONL session logs.
-- **Cache Hit & Savings Analytics:** Calculates `input`, `output`, `cache_read`, and `cache_write` breakdowns alongside estimated dollar savings from prompt caching.
-- **Waste & Optimization Insights:** Automatically flags repeated file reads, high-token tool outputs, and expensive turns.
-- **Step-by-Step Replay Timeline:** Filter steps by type (prompts, tool calls, errors) and inspect expandable tool arguments and outputs.
-
-## Tech Stack
-
-- **Framework:** Next.js (App Router) + React + TypeScript (`strict: true`)
-- **Styling:** Tailwind CSS + `lucide-react` + `motion/react`
+- **100% Local & Zero Telemetry:** No analytics, no outbound requests, no auth-file fingerprinting. Drop a `.jsonl` file in the browser, use the opt-in Local Session Scanner, or explore built-in demo sessions.
+- **Multi-Harness Normalization:** Built-in parsers for **Claude Code**, **Codex CLI**, **OpenCode**, and **Antigravity** (plus generic JSONL session logs).
+- **Opt-In Local Session Scanner:** Scans preset local log directories (`~/.claude/projects`, `~/.codex/sessions`, `~/.local/share/opencode`, `~/.gemini/antigravity/brain`) or user-approved paths with path-traversal protection (`isPathInsideRoots`).
+- **Cache Hit & Quota Impact Estimator:** Breaks down `input`, `output`, `cache_read`, and `cache_write` tokens, estimates dollar savings, and models **5H / 7D subscription quota impact** across plan presets (Claude Pro/Max/Ultra, ChatGPT Plus/Pro, Antigravity AI Pro/Ultra, API budgets).
+- **8-Rule Offline Waste Detector:** Automatically flags low cache reuse, oversized token spikes, context bloat, duplicate file reads, repeated tool-call loops, high input-to-output ratios, premium model mismatches, and failed tool calls.
+- **Mission Control Views:**
+  - **Overview:** Session goal, token breakdown bar, quota impact card, tool category counts, and top optimization signals.
+  - **Board:** Filterable step-by-step timeline (`All`, `User`, `Agent`, `Errors`) paired with a collapsible **Step Inspector** for prompts and expandable tool-call arguments/outputs.
+  - **Graph:** Interactive step-to-file/tool **Context Graph** highlighting flow, context links, duplicate reads, and tool errors.
+  - **Diagnostics:** Full optimization report with one-click jumps to affected steps.
+- **Browser Persistence:** Uploaded sessions, dismissed demos, and plan selections persist locally in `localStorage`.
 
 ## Getting Started
+
+### Prerequisites
+
+- **Node.js** 20+
+- **npm** 10+
+
+### Local Setup
 
 ```bash
 git clone https://github.com/yamisagi/harness-replay.git
@@ -38,27 +59,43 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Production Build
+
+```bash
+npm run lint
+npm run build
+npm run start
+```
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript (`strict: true`)
+- **Styling:** Tailwind CSS 4 + `lucide-react` + `motion/react`
 
 ## Project Structure
 
 ```text
-app/                  # Lean App Router layout & SSR entry
+app/                      # Next.js App Router (layout, page, globals.css, local API routes)
 src/
-├── types/            # NormalizedSession & analytics TypeScript contracts
-├── data/             # Built-in demo sessions for instant exploration
+├── types/                # NormalizedSession, SessionStep, ToolCall, and analytics contracts
+├── data/                 # Built-in demo sessions for instant exploration
 ├── lib/
-│   ├── parsers/      # Harness .jsonl log parsers
-│   ├── analytics/    # Token, cache-hit, and waste-detection calculators
-│   └── pricing.ts    # Model token pricing table
-├── hooks/            # Client state management (useReplayWorkspace)
-└── components/       # Modular UI components & style dictionaries
+│   ├── parsers/          # Modular .jsonl parsers (Claude Code, Codex CLI, OpenCode, Antigravity)
+│   ├── server/           # Opt-in local filesystem session scanner
+│   ├── analytics/        # Token/cost calculator, 8-rule waste detector, context graph builder
+│   ├── storage/          # Browser localStorage persistence with quota handling
+│   ├── pricing.ts        # Model token pricing table
+│   └── quota.ts          # 5H / 7D quota impact estimator
+├── hooks/                # Client state hooks (useReplayWorkspace, useLocalSessions)
+└── components/           # Swarm Mission Control UI & *Styles.ts dictionaries
 ```
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an issue or submit a pull request—especially for additional harness log parsers (Cursor, Kiro, Pi, etc.).
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request—especially if you want to add a parser for another AI coding harness (Cursor, Windsurf, Kiro, Cline, Pi, etc.).
 
 ## License
 
-MIT
+[MIT](LICENSE)

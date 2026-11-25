@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Gauge } from "lucide-react";
 import {
   estimateSessionQuota,
@@ -8,7 +8,7 @@ import {
   loadSavedPlanId,
   savePlanId,
 } from "@/src/lib/quota";
-import { NormalizedSession, SessionAnalytics } from "@/src/types/session";
+import { HarnessType, NormalizedSession, SessionAnalytics } from "@/src/types/session";
 import { SWARM_STYLES } from "./SwarmStyles";
 
 interface QuotaImpactCardProps {
@@ -26,17 +26,19 @@ function fmtPct(pct: number): string {
   return pct < 0.1 && pct > 0 ? "<0.1" : pct.toFixed(1);
 }
 
+const subscribeNoop = () => () => {};
+
 export function QuotaImpactCard({ session, analytics }: QuotaImpactCardProps) {
   const plans = getPlansForHarness(session.harness);
-  const [planId, setPlanId] = useState<string>(plans[0].id);
+  const [selectedPlans, setSelectedPlans] = useState<Partial<Record<HarnessType, string>>>({});
+  const savedPlanId = useSyncExternalStore(
+    subscribeNoop,
+    () => loadSavedPlanId(session.harness),
+    () => null
+  );
 
-  useEffect(() => {
-    const saved = loadSavedPlanId(session.harness);
-    const valid = plans.find((p) => p.id === saved);
-    setPlanId(valid ? valid.id : plans[0].id);
-  }, [session.harness]);
-
-  const activePlan = plans.find((p) => p.id === planId) ?? plans[0];
+  const candidateId = selectedPlans[session.harness] ?? savedPlanId;
+  const activePlan = plans.find((p) => p.id === candidateId) ?? plans[0];
   const impact = estimateSessionQuota(session, analytics, activePlan);
   const tone5h = barTone(impact.used5hPct ?? 0);
   const tone7d = barTone(impact.used7dPct);
@@ -58,8 +60,9 @@ export function QuotaImpactCard({ session, analytics }: QuotaImpactCardProps) {
           aria-label="Subscription plan"
           value={activePlan.id}
           onChange={(e) => {
-            setPlanId(e.target.value);
-            savePlanId(session.harness, e.target.value);
+            const nextId = e.target.value;
+            setSelectedPlans((prev) => ({ ...prev, [session.harness]: nextId }));
+            savePlanId(session.harness, nextId);
           }}
           className="rounded border border-[#252830] bg-[#090a0c] px-2 py-1 text-[11px] font-mono text-zinc-200 focus:outline-none focus:border-zinc-500 cursor-pointer"
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CTX_NODE_H,
   CTX_NODE_W,
@@ -20,11 +20,24 @@ type GraphFilter = "all" | "files" | "issues";
 
 export function ContextGraphTab({ graph, selectedStepId, onSelectStep }: ContextGraphTabProps) {
   const [filter, setFilter] = useState<GraphFilter>("all");
-  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const [focused, setFocused] = useState<{
+    graph: SessionGraphData;
+    filter: GraphFilter;
+    nodeId: string;
+  } | null>(null);
 
-  useEffect(() => {
-    setFocusedNodeId(null);
-  }, [graph, filter]);
+  const focusedNodeId =
+    focused && focused.graph === graph && focused.filter === filter ? focused.nodeId : null;
+  const setFocusedNodeId = (
+    next: string | null | ((prev: string | null) => string | null)
+  ) => {
+    setFocused((prev) => {
+      const current =
+        prev && prev.graph === graph && prev.filter === filter ? prev.nodeId : null;
+      const nodeId = typeof next === "function" ? next(current) : next;
+      return nodeId ? { graph, filter, nodeId } : null;
+    });
+  };
 
   const counts = useMemo(
     () => ({
