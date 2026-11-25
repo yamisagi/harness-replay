@@ -20,27 +20,32 @@ export function useLocalSessions(onImportSessions: (sessions: NormalizedSession[
 
   useEffect(() => {
     let active = true;
-    const stored = loadScannerState();
-    if (stored) {
-      setSelectedDirs(stored.selectedDirs);
-      setCustomDirs(stored.customDirs);
-      setScanned(stored.scanned);
-      setHasScanned(stored.scanned.length > 0);
-    }
-    setIsHydrated(true);
+    async function init() {
+      await Promise.resolve();
+      if (!active) return;
 
-    fetch("/api/sessions")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: { presets?: LocalPresetDir[] } | null) => {
+      const stored = loadScannerState();
+      if (stored) {
+        setSelectedDirs(stored.selectedDirs);
+        setCustomDirs(stored.customDirs);
+        setScanned(stored.scanned);
+        setHasScanned(stored.scanned.length > 0);
+      }
+      setIsHydrated(true);
+
+      try {
+        const res = await fetch("/api/sessions");
+        const data = res.ok ? ((await res.json()) as { presets?: LocalPresetDir[] }) : null;
         if (!active || !data?.presets) return;
         setPresets(data.presets);
         if (!stored) {
           setSelectedDirs(data.presets.filter((p) => p.exists).map((p) => p.path));
         }
-      })
-      .catch(() => {
+      } catch {
         // Ignore preset fetch errors when offline/static
-      });
+      }
+    }
+    void init();
     return () => {
       active = false;
     };

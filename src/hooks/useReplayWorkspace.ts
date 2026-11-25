@@ -29,15 +29,22 @@ export function useReplayWorkspace() {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = loadStoredSessionState();
-    setUploadedSessions(stored.uploaded);
-    setDismissedDemoIds(stored.dismissedDemoIds);
-    if (stored.uploaded.length > 0) {
-      setSelectedId(stored.uploaded[0].id);
-    } else {
-      const firstDemo = DEMO_SESSIONS.find((d) => !stored.dismissedDemoIds.includes(d.id));
-      setSelectedId(firstDemo?.id ?? "");
-    }
+    let active = true;
+    Promise.resolve().then(() => {
+      if (!active) return;
+      const stored = loadStoredSessionState();
+      setUploadedSessions(stored.uploaded);
+      setDismissedDemoIds(stored.dismissedDemoIds);
+      if (stored.uploaded.length > 0) {
+        setSelectedId(stored.uploaded[0].id);
+      } else {
+        const firstDemo = DEMO_SESSIONS.find((d) => !stored.dismissedDemoIds.includes(d.id));
+        setSelectedId(firstDemo?.id ?? "");
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const sessions = useMemo(() => {
@@ -61,14 +68,23 @@ export function useReplayWorkspace() {
     return buildSessionGraph(selectedSession, dupPaths);
   }, [selectedSession, analytics]);
 
-  useEffect(() => {
-    setSelectedStepId(selectedSession?.steps[0]?.id ?? null);
-  }, [selectedSession?.id]);
+  const activeStepId = useMemo(() => {
+    if (!selectedSession) return null;
+    if (selectedStepId && selectedSession.steps.some((s) => s.id === selectedStepId)) {
+      return selectedStepId;
+    }
+    return selectedSession.steps[0]?.id ?? null;
+  }, [selectedSession, selectedStepId]);
 
   const selectedStep = useMemo(() => {
-    if (!selectedSession || !selectedStepId) return null;
-    return selectedSession.steps.find((s) => s.id === selectedStepId) ?? null;
-  }, [selectedSession, selectedStepId]);
+    if (!selectedSession || !activeStepId) return null;
+    return selectedSession.steps.find((s) => s.id === activeStepId) ?? null;
+  }, [selectedSession, activeStepId]);
+
+  const selectSession = (id: string) => {
+    setSelectedId(id);
+    setSelectedStepId(null);
+  };
 
   const selectStep = (stepId: string) => {
     setSelectedStepId(stepId);
@@ -163,10 +179,10 @@ export function useReplayWorkspace() {
     sessions,
     selectedSession,
     selectedId: selectedSession?.id ?? "",
-    setSelectedId,
+    setSelectedId: selectSession,
     activeTab,
     setActiveTab,
-    selectedStepId,
+    selectedStepId: activeStepId,
     selectedStep,
     selectStep,
     isInspectorOpen,
