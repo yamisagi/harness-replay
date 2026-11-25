@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { RotateCcw, Terminal, Trash2, Upload } from "lucide-react";
+import { Heart, RotateCcw, Terminal, Trash2, Upload } from "lucide-react";
 import { NormalizedSession } from "@/src/types/session";
+import { LocalScannerPanel } from "./LocalScannerPanel";
 import { REPLAY_STYLES } from "./ReplayStyles";
 
 interface SessionSidebarProps {
@@ -10,6 +11,7 @@ interface SessionSidebarProps {
   selectedId: string;
   onSelect: (id: string) => void;
   onUploadFile: (file: File) => void;
+  onImportSessions: (sessions: NormalizedSession[]) => void;
   onDeleteSession: (id: string) => void;
   onRestoreDemos: () => void;
   hasDismissedDemos: boolean;
@@ -29,6 +31,7 @@ export function SessionSidebar({
   selectedId,
   onSelect,
   onUploadFile,
+  onImportSessions,
   onDeleteSession,
   onRestoreDemos,
   hasDismissedDemos,
@@ -38,11 +41,17 @@ export function SessionSidebar({
 
   return (
     <aside className={REPLAY_STYLES.sidebar}>
-      <div className={REPLAY_STYLES.brandRow}>
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#1e2026]">
         <div className={REPLAY_STYLES.brandTitle}>
           <Terminal className="w-4 h-4 text-zinc-300" />
           <span>harness-replay</span>
         </div>
+        <span className="inline-flex items-center gap-1 text-[10px] font-mono tracking-tight text-zinc-300 whitespace-nowrap">
+          <span className="text-zinc-500">made by</span>
+          <span>CNDN Dev</span>
+          <Heart className="w-2.5 h-2.5 text-rose-400 fill-rose-400 shrink-0" aria-label="loves" />
+          <span>Antigravity</span>
+        </span>
       </div>
 
       <div
@@ -83,6 +92,8 @@ export function SessionSidebar({
           {uploadError}
         </p>
       )}
+
+      <LocalScannerPanel onImportSessions={onImportSessions} />
 
       <div className="flex flex-col gap-1.5 overflow-y-auto">
         <div className="flex items-center justify-between px-0.5 pb-1">

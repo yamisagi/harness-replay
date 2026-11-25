@@ -1,7 +1,7 @@
 export const REPLAY_STYLES = {
   shell: "min-h-screen bg-[#0b0c0e] text-zinc-200 flex flex-col lg:flex-row",
   sidebar:
-    "w-full lg:w-76 shrink-0 border-b lg:border-b-0 lg:border-r border-[#222429] bg-[#0e1014] p-4 flex flex-col gap-4",
+    "w-full lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-[#1e2026] bg-[#0c0e12] p-4 flex flex-col gap-4 lg:h-screen lg:overflow-y-auto",
   brandRow: "flex items-center justify-between gap-2 pb-3 border-b border-[#222429]",
   brandTitle: "text-sm font-semibold tracking-tight text-zinc-100 flex items-center gap-2 font-mono",
   uploadBox:
