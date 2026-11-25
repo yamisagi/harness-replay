@@ -168,6 +168,33 @@ function isSessionRecord(value: unknown): value is RawJsonRecord {
   return false;
 }
 
+function deriveSessionTitle(
+  records: RawJsonRecord[],
+  steps: SessionStep[],
+  fileName: string
+): string {
+  for (const raw of records) {
+    const rec = raw as Record<string, unknown>;
+    const explicit = rec.title ?? rec.conversation_title ?? rec.session_title;
+    if (typeof explicit === "string" && explicit.trim().length > 0) {
+      return explicit.trim().slice(0, 72);
+    }
+  }
+
+  const firstUser = steps.find((s) => s.role === "user" && (s.content || s.summary));
+  if (firstUser) {
+    const cleaned = (firstUser.content ?? firstUser.summary)
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (cleaned.length > 0 && cleaned !== "USER_INPUT" && cleaned !== "Step") {
+      return cleaned.length > 64 ? `${cleaned.slice(0, 64)}…` : cleaned;
+    }
+  }
+
+  return fileName.replace(/\.(jsonl|json|txt)$/i, "");
+}
+
 export function parseJsonlSession(rawText: string, fileName: string): NormalizedSession {
   const records: RawJsonRecord[] = [];
   for (const line of rawText.split(/\r?\n/)) {
@@ -215,7 +242,7 @@ export function parseJsonlSession(rawText: string, fileName: string): Normalized
 
   return {
     id: `uploaded-${Date.now()}`,
-    title: fileName.replace(/\.jsonl$/i, ""),
+    title: deriveSessionTitle(records, steps, fileName),
     harness: detectHarness(records),
     model: detectedModel,
     createdAt: steps[0]?.timestamp ?? new Date().toISOString(),
