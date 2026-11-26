@@ -28,6 +28,15 @@ const MAX_PARSED_SESSIONS = 100;
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const SKIP_DIRS = new Set(["node_modules", ".git", ".ssh", ".next", "chunks"]);
 
+export function isLocalScannerRequest(hostHeader: string | null): boolean {
+  if (process.env.VERCEL === "1" || process.env.DISABLE_LOCAL_SCANNER === "true") {
+    return false;
+  }
+  if (!hostHeader) return true;
+  const hostname = hostHeader.replace(/:\d+$/, "").toLowerCase();
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
 export function expandHomePath(inputPath: string): string {
   const trimmed = inputPath.trim();
   if (trimmed === "~") return os.homedir();

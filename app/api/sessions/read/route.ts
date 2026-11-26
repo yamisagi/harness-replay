@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readLocalSessionFile } from "@/src/lib/server/localSessionScanner";
+import { isLocalScannerRequest, readLocalSessionFile } from "@/src/lib/server/localSessionScanner";
 
 export async function POST(request: NextRequest) {
+  if (!isLocalScannerRequest(request.headers.get("host"))) {
+    return NextResponse.json(
+      { error: "Local scanner is disabled in hosted deployments." },
+      { status: 403 }
+    );
+  }
   try {
     const body = (await request.json()) as {
       filePath?: unknown;
