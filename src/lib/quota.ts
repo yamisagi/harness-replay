@@ -24,8 +24,8 @@ export interface QuotaImpact {
 const PLAN_STORAGE_KEY = "harness-replay:quota-plans:v1";
 
 const QUOTA_PLANS: QuotaPlan[] = [
-  { id: "agy-pro", harness: "antigravity", label: "Antigravity AI Pro", budget5hUsd: 4, budget7dUsd: 28 },
-  { id: "agy-ultra", harness: "antigravity", label: "Antigravity AI Ultra", budget5hUsd: 20, budget7dUsd: 140 },
+  { id: "agy-pro", harness: "antigravity", label: "Antigravity AI Pro", budget5hUsd: 11, budget7dUsd: 45 },
+  { id: "agy-ultra", harness: "antigravity", label: "Antigravity AI Ultra", budget5hUsd: 55, budget7dUsd: 225 },
   { id: "claude-pro", harness: "claude-code", label: "Claude Pro", budget5hUsd: 5, budget7dUsd: 45 },
   { id: "claude-max-5x", harness: "claude-code", label: "Claude Max 5x", budget5hUsd: 25, budget7dUsd: 225 },
   { id: "claude-ultra", harness: "claude-code", label: "Claude Ultra", budget5hUsd: null, budget7dUsd: 450 },

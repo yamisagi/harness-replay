@@ -179,9 +179,11 @@ export function ContextGraphTab({ graph, selectedStepId, onSelectStep }: Context
                 <text x={10} y={35} fill="#e4e4e7" fontSize={11} fontFamily="sans-serif">
                   {node.label.slice(0, 34)}{node.label.length > 34 ? "…" : ""}
                 </text>
-                <text x={STEP_NODE_W - 10} y={18} textAnchor="end" fill="#a1a1aa" fontSize={10} fontFamily="monospace">
-                  {node.totalTokens.toLocaleString("en-US")} tok
-                </text>
+                {node.totalTokens > 0 && (
+                  <text x={STEP_NODE_W - 10} y={18} textAnchor="end" fill="#a1a1aa" fontSize={10} fontFamily="monospace">
+                    {node.totalTokens.toLocaleString("en-US")} tok
+                  </text>
+                )}
               </g>
             );
           })}

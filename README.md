@@ -34,11 +34,11 @@ Modern AI coding harnesses execute dozens of tool calls, read files repeatedly, 
 - **100% Local & Zero Telemetry:** No analytics, no outbound requests, no auth-file fingerprinting. Drop a `.jsonl` file in the browser, use the opt-in Local Session Scanner, or explore built-in demo sessions.
 - **Multi-Harness Normalization:** Built-in parsers for **Claude Code**, **Codex CLI**, **OpenCode**, and **Antigravity** (plus generic JSONL session logs).
 - **Opt-In Local Session Scanner:** Scans preset local log directories (`~/.claude/projects`, `~/.codex/sessions`, `~/.local/share/opencode`, `~/.gemini/antigravity/brain`) or user-approved paths with path-traversal protection (`isPathInsideRoots`).
-- **Cache Hit & Quota Impact Estimator:** Breaks down `input`, `output`, `cache_read`, and `cache_write` tokens, estimates dollar savings, and models **5H / 7D subscription quota impact** across plan presets (Claude Pro/Max/Ultra, ChatGPT Plus/Pro, Antigravity AI Pro/Ultra, API budgets).
+- **Cache Hit & Quota Impact Estimator:** Breaks down `input`, `output`, `cache_read`, and `cache_write` tokens, estimates dollar savings, and models **5H / 7D subscription quota impact** across plan presets (Claude Pro/Max/Ultra, ChatGPT Plus/Pro, Antigravity AI Pro/Ultra, API budgets; rough estimates based on API token pricing).
 - **8-Rule Offline Waste Detector:** Automatically flags low cache reuse, oversized token spikes, context bloat, duplicate file reads, repeated tool-call loops, high input-to-output ratios, premium model mismatches, and failed tool calls.
 - **Mission Control Views:**
   - **Overview:** Session goal, token breakdown bar, quota impact card, tool category counts, and top optimization signals.
-  - **Board:** Filterable step-by-step timeline (`All`, `User`, `Agent`, `Errors`) paired with a collapsible **Step Inspector** for prompts and expandable tool-call arguments/outputs.
+  - **Board:** Filterable step-by-step timeline (`All`, `User`, `Agent`, `Errors`) paired with a collapsible **Step Inspector** for prompts, expandable tool-call arguments/outputs, and distinct `NO RESULT` ("Result not recorded") badges for truncated logs.
   - **Graph:** Interactive step-to-file/tool **Context Graph** highlighting flow, context links, duplicate reads, and tool errors.
   - **Diagnostics:** Full optimization report with one-click jumps to affected steps.
 - **Browser Persistence:** Uploaded sessions, dismissed demos, and plan selections persist locally in `localStorage`.

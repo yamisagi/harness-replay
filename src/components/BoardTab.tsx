@@ -106,15 +106,15 @@ export function BoardTab({
             const isSelected = step.id === selectedStepId;
             const isUser = step.role === "user";
             const hasError = step.toolCalls.some((t) => t.status === "error");
-            const totalStepTokens =
-              step.usage.inputTokens +
-              step.usage.outputTokens +
-              step.usage.cacheReadTokens +
-              step.usage.cacheWriteTokens;
+            const hasPending = !hasError && step.toolCalls.some((t) => t.status === "pending");
+            const u = step.usage;
+            const totalStepTokens = u.inputTokens + u.outputTokens + u.cacheReadTokens + u.cacheWriteTokens;
             const barWidth = Math.max(4, Math.round((totalStepTokens / maxTokens) * 100));
 
             const nodeColor = hasError
               ? "border-rose-400 bg-rose-500"
+              : hasPending
+              ? "border-amber-400 bg-amber-400"
               : isUser
               ? "border-zinc-400 bg-[#090a0c]"
               : step.usage.cacheReadTokens > 0
@@ -159,9 +159,10 @@ export function BoardTab({
                       </span>
                     )}
                     {hasError && (
-                      <span className="text-[10px] font-mono text-rose-400 uppercase shrink-0">
-                        ERR
-                      </span>
+                      <span className="text-[10px] font-mono text-rose-400 uppercase shrink-0">ERR</span>
+                    )}
+                    {hasPending && (
+                      <span className="text-[10px] font-mono text-amber-300 uppercase shrink-0">NO RESULT</span>
                     )}
                   </div>
 
@@ -176,15 +177,14 @@ export function BoardTab({
                         +{step.usage.cacheReadTokens.toLocaleString("en-US")} cache
                       </span>
                     )}
-                    <div className="hidden sm:block w-14 h-1.5 rounded-xs bg-[#1c1f26] overflow-hidden">
-                      <div
-                        className={`h-full ${hasError ? "bg-rose-400" : "bg-zinc-300"}`}
-                        style={{ width: `${barWidth}%` }}
-                      />
-                    </div>
-                    <span className="text-zinc-300 w-16 text-right">
-                      {totalStepTokens.toLocaleString("en-US")} tok
-                    </span>
+                    {totalStepTokens > 0 && (
+                      <>
+                        <div className="hidden sm:block w-14 h-1.5 rounded-xs bg-[#1c1f26] overflow-hidden">
+                          <div className={`h-full ${hasError ? "bg-rose-400" : "bg-zinc-300"}`} style={{ width: `${barWidth}%` }} />
+                        </div>
+                        <span className="text-zinc-300 w-16 text-right">{totalStepTokens.toLocaleString("en-US")} tok</span>
+                      </>
+                    )}
                   </div>
                 </button>
               </div>

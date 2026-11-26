@@ -9,13 +9,15 @@ export interface TokenUsage {
   cacheWriteTokens: number;
 }
 
+export type ToolCallStatus = "success" | "error" | "pending";
+
 export interface ToolCallRecord {
   id: string;
   name: string;
   targetPath?: string;
   argumentsPreview: string;
   outputPreview?: string;
-  status: "success" | "error";
+  status: ToolCallStatus;
   durationMs?: number;
 }
 

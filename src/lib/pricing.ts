@@ -83,3 +83,11 @@ export function calculateUsageCost(usage: TokenUsage, modelName: string): { cost
 
   return { costUsd, savingsUsd };
 }
+
+export function formatUsd(amount: number): string {
+  const decimals = amount === 0 || Math.abs(amount) >= 1 ? 2 : 3;
+  return `$${amount.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
+}

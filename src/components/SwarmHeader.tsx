@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, GitBranch, LayoutGrid, PanelRightClose, PanelRightOpen, ShieldAlert } from "lucide-react";
+import { formatUsd } from "@/src/lib/pricing";
 import { NormalizedSession, SessionAnalytics } from "@/src/types/session";
 import { SWARM_STYLES } from "./SwarmStyles";
 
@@ -54,7 +55,7 @@ export function SwarmHeader({
 
   return (
     <header className={SWARM_STYLES.topBar}>
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-3">
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className={SWARM_STYLES.badge}>{HARNESS_LABELS[session.harness]}</span>
@@ -65,10 +66,10 @@ export function SwarmHeader({
           <p className="text-[11px] font-mono text-zinc-500 truncate">{session.model}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <span className={SWARM_STYLES.statPill}>
             <span className="text-zinc-500">COST</span>
-            <span className="text-zinc-100">${analytics.estimatedCostUsd.toFixed(3)}</span>
+            <span className="text-zinc-100">{formatUsd(analytics.estimatedCostUsd)}</span>
           </span>
           <span className={SWARM_STYLES.statPill}>
             <span className="text-zinc-500">CACHE</span>

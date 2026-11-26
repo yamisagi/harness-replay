@@ -19,7 +19,13 @@ function cleanUserContent(rawText: string): string {
 
 function extractAgyToolCalls(raw: Record<string, unknown>, stepIdx: number): ToolCallRecord[] {
   if (!Array.isArray(raw.tool_calls)) return [];
-  const isError = raw.status === "ERROR";
+  const rawStatus = typeof raw.status === "string" ? raw.status.toUpperCase() : "";
+  const stepStatus: ToolCallRecord["status"] =
+    rawStatus === "ERROR"
+      ? "error"
+      : rawStatus === "PENDING" || rawStatus === "RUNNING"
+      ? "pending"
+      : "success";
 
   return raw.tool_calls
     .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
@@ -33,13 +39,20 @@ function extractAgyToolCalls(raw: Record<string, unknown>, stepIdx: number): Too
         (args.AbsolutePath as string | undefined) ??
         (args.file_path as string | undefined) ??
         (args.path as string | undefined);
+      const rawOutput =
+        typeof item.output === "string"
+          ? item.output
+          : typeof item.result === "string"
+          ? item.result
+          : undefined;
 
       return {
         id: `agy-${stepIdx}-tool-${idx + 1}`,
         name: String(item.name ?? "tool_call"),
         targetPath,
         argumentsPreview: JSON.stringify(args, null, 2).slice(0, 400),
-        status: isError ? "error" : "success",
+        outputPreview: rawOutput ? rawOutput.slice(0, 400) : undefined,
+        status: stepStatus,
       };
     });
 }

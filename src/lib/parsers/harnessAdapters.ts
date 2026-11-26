@@ -125,6 +125,22 @@ export function parseOpenCodeRecord(raw: Record<string, unknown>, idx: number): 
   };
 
   const state = (part.state ?? {}) as Record<string, unknown>;
+  const rawStateStatus = typeof state.status === "string" ? state.status.toLowerCase() : "";
+  const rawOpenCodeOutput =
+    typeof state.output === "string"
+      ? state.output
+      : typeof state.error === "string"
+      ? state.error
+      : undefined;
+  const openCodeStatus: ToolCallRecord["status"] =
+    rawStateStatus === "error"
+      ? "error"
+      : rawStateStatus === "pending" ||
+        rawStateStatus === "running" ||
+        (!rawOpenCodeOutput && rawStateStatus !== "completed")
+      ? "pending"
+      : "success";
+
   const toolCalls: ToolCallRecord[] =
     part.type === "tool" || typeof part.tool === "string"
       ? [
@@ -132,7 +148,8 @@ export function parseOpenCodeRecord(raw: Record<string, unknown>, idx: number): 
             id: String(part.id ?? `oc-tool-${idx + 1}`),
             name: String(part.tool ?? "tool_call"),
             argumentsPreview: JSON.stringify(state.input ?? {}, null, 2).slice(0, 400),
-            status: state.status === "error" ? "error" : "success",
+            outputPreview: rawOpenCodeOutput ? rawOpenCodeOutput.slice(0, 400) : undefined,
+            status: openCodeStatus,
           },
         ]
       : [];

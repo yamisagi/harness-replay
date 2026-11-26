@@ -1,4 +1,4 @@
-import { getModelPricing } from "@/src/lib/pricing";
+import { formatUsd, getModelPricing } from "@/src/lib/pricing";
 import { NormalizedSession, OptimizationInsight, SessionStep } from "@/src/types/session";
 
 export interface WasteDetectionInput {
@@ -132,7 +132,7 @@ function detectModelMismatch(input: WasteDetectionInput): OptimizationInsight | 
     title: `Premium model (${input.session.model}) used for routine steps`,
     description: "Short responses and file-exploration turns do not require top-tier reasoning pricing.",
     action: "Fix: Route exploration and routine edits to a lighter/faster model tier, saving flagship models for planning.",
-    savingsEstimate: `~$${potentialSavings.toFixed(3)} potential`,
+    savingsEstimate: `~${formatUsd(potentialSavings)} potential`,
   };
 }
 
@@ -147,7 +147,7 @@ export function detectWasteInsights(input: WasteDetectionInput): OptimizationIns
       title: `Prompt cache is working well (${cacheHitRate.toFixed(1)}% reused)`,
       description: `${totalCacheReadTokens.toLocaleString("en-US")} tokens were reused from cache instead of being billed at full input rates.`,
       action: "Keep static rules (like AGENTS.md) at the top of your prompt to maintain these savings.",
-      savingsEstimate: `~$${estimatedSavingsUsd.toFixed(3)} saved`,
+      savingsEstimate: `~${formatUsd(estimatedSavingsUsd)} saved`,
     });
   } else if (totalContextInput > 5000) {
     insights.push({
