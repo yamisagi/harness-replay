@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronDown, ChevronRight, FolderGit2, Heart, RotateCcw, Terminal, Upload } from "lucide-react";
 import { groupSessionsByProject } from "@/src/lib/analytics/sessionCompare";
 import { NormalizedSession } from "@/src/types/session";
@@ -22,6 +22,15 @@ interface SessionSidebarProps {
   uploadError: string | null;
 }
 
+const subscribeNoop = () => () => {};
+
+function getIsLocalSnapshot(): boolean {
+  const host = window.location.hostname.toLowerCase();
+  const localHost =
+    host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+  return localHost && process.env.NEXT_PUBLIC_DISABLE_LOCAL_SCANNER !== "true";
+}
+
 export function SessionSidebar({
   sessions,
   selectedId,
@@ -37,6 +46,7 @@ export function SessionSidebar({
 }: SessionSidebarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [collapsedProjects, setCollapsedProjects] = useState<Record<string, boolean>>({});
+  const isLocalEnv = useSyncExternalStore(subscribeNoop, getIsLocalSnapshot, () => false);
 
   const projectGroups = useMemo(() => groupSessionsByProject(sessions), [sessions]);
 
@@ -96,7 +106,7 @@ export function SessionSidebar({
         </p>
       )}
 
-      <LocalScannerPanel onImportSessions={onImportSessions} />
+      {isLocalEnv && <LocalScannerPanel onImportSessions={onImportSessions} />}
 
       <div className="flex flex-col gap-2 overflow-y-auto">
         <div className="flex items-center justify-between px-0.5 pb-0.5">

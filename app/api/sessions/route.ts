@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getDefaultPresetDirs,
+  isLocalScannerRequest,
   scanDirectoriesForSessions,
 } from "@/src/lib/server/localSessionScanner";
 
-export async function GET() {
+const HOSTED_DISABLED_RESPONSE = NextResponse.json(
+  { error: "Local scanner is disabled in hosted deployments." },
+  { status: 403 }
+);
+
+export async function GET(request: NextRequest) {
+  if (!isLocalScannerRequest(request.headers.get("host"))) {
+    return HOSTED_DISABLED_RESPONSE;
+  }
   try {
     const presets = await getDefaultPresetDirs();
     return NextResponse.json({ presets });
@@ -14,6 +23,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isLocalScannerRequest(request.headers.get("host"))) {
+    return HOSTED_DISABLED_RESPONSE;
+  }
   try {
     const body = (await request.json()) as { directories?: unknown };
     if (!Array.isArray(body.directories)) {
