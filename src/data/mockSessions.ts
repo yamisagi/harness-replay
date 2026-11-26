@@ -1,4 +1,5 @@
 import { NormalizedSession } from "@/src/types/session";
+import { COMPARE_DEMO_SESSIONS } from "./compareDemoPair";
 
 export const DEMO_SESSIONS: NormalizedSession[] = [
   {
@@ -34,8 +35,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-1",
             name: "view_file",
-            targetPath: "proxy.ts",
-            argumentsPreview: '{ "AbsolutePath": "proxy.ts" }',
+            targetPath: "~/Projects/acme-web/proxy.ts",
+            argumentsPreview: '{ "AbsolutePath": "~/Projects/acme-web/proxy.ts" }',
             outputPreview: "42 lines read successfully.",
             status: "success",
             durationMs: 45,
@@ -43,8 +44,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-2",
             name: "view_file",
-            targetPath: "src/lib/auth.ts",
-            argumentsPreview: '{ "AbsolutePath": "src/lib/auth.ts" }',
+            targetPath: "~/Projects/acme-web/src/lib/auth.ts",
+            argumentsPreview: '{ "AbsolutePath": "~/Projects/acme-web/src/lib/auth.ts" }',
             outputPreview: "88 lines read successfully.",
             status: "success",
             durationMs: 52,
@@ -65,8 +66,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-3",
             name: "replace_file_content",
-            targetPath: "proxy.ts",
-            argumentsPreview: '{ "TargetFile": "proxy.ts", "StartLine": 12, "EndLine": 30 }',
+            targetPath: "~/Projects/acme-web/proxy.ts",
+            argumentsPreview: '{ "TargetFile": "~/Projects/acme-web/proxy.ts", "StartLine": 12, "EndLine": 30 }',
             outputPreview: "Updated proxy.ts",
             status: "success",
             durationMs: 90,
@@ -115,8 +116,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-c1",
             name: "read_file",
-            targetPath: "app/api/sessions/route.ts",
-            argumentsPreview: '{ "path": "app/api/sessions/route.ts" }',
+            targetPath: "~/Projects/acme-web/app/api/sessions/route.ts",
+            argumentsPreview: '{ "path": "~/Projects/acme-web/app/api/sessions/route.ts" }',
             outputPreview: "64 lines",
             status: "success",
             durationMs: 35,
@@ -136,8 +137,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-c2",
             name: "read_file",
-            targetPath: "app/api/sessions/route.ts",
-            argumentsPreview: '{ "path": "app/api/sessions/route.ts" }',
+            targetPath: "~/Projects/acme-web/app/api/sessions/route.ts",
+            argumentsPreview: '{ "path": "~/Projects/acme-web/app/api/sessions/route.ts" }',
             outputPreview: "64 lines",
             status: "success",
             durationMs: 30,
@@ -185,8 +186,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-x1",
             name: "write_file",
-            targetPath: "scripts/migrate.ts",
-            argumentsPreview: '{ "path": "scripts/migrate.ts" }',
+            targetPath: "~/Projects/data-pipeline/scripts/migrate.ts",
+            argumentsPreview: '{ "path": "~/Projects/data-pipeline/scripts/migrate.ts" }',
             outputPreview: "Wrote 92 lines",
             status: "success",
             durationMs: 60,
@@ -226,8 +227,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-oh1",
             name: "read_file",
-            targetPath: "db/schema.sql",
-            argumentsPreview: '{ "path": "db/schema.sql" }',
+            targetPath: "~/Projects/data-pipeline/db/schema.sql",
+            argumentsPreview: '{ "path": "~/Projects/data-pipeline/db/schema.sql" }',
             outputPreview: "110 lines",
             status: "success",
             durationMs: 25,
@@ -267,8 +268,8 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
           {
             id: "tc-cs1",
             name: "edit_file",
-            targetPath: "app/globals.css",
-            argumentsPreview: '{ "path": "app/globals.css" }',
+            targetPath: "~/Projects/acme-web/app/globals.css",
+            argumentsPreview: '{ "path": "~/Projects/acme-web/app/globals.css" }',
             outputPreview: "Updated 34 lines",
             status: "success",
             durationMs: 40,
@@ -334,4 +335,5 @@ export const DEMO_SESSIONS: NormalizedSession[] = [
       },
     ],
   },
+  ...COMPARE_DEMO_SESSIONS,
 ];

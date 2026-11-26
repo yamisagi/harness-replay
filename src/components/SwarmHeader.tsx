@@ -1,11 +1,19 @@
 "use client";
 
-import { Activity, GitBranch, LayoutGrid, PanelRightClose, PanelRightOpen, ShieldAlert } from "lucide-react";
+import {
+  Activity,
+  GitBranch,
+  GitCompareArrows,
+  LayoutGrid,
+  PanelRightClose,
+  PanelRightOpen,
+  ShieldAlert,
+} from "lucide-react";
 import { formatUsd } from "@/src/lib/pricing";
 import { NormalizedSession, SessionAnalytics } from "@/src/types/session";
 import { SWARM_STYLES } from "./SwarmStyles";
 
-export type SwarmTab = "overview" | "board" | "graph" | "diagnostics";
+export type SwarmTab = "overview" | "board" | "graph" | "diagnostics" | "compare";
 
 interface SwarmHeaderProps {
   session: NormalizedSession;
@@ -51,6 +59,7 @@ export function SwarmHeader({
       count: warningCount > 0 ? warningCount : analytics.insights.length,
       icon: ShieldAlert,
     },
+    { id: "compare", label: "Compare", icon: GitCompareArrows },
   ];
 
   return (

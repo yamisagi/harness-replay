@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -176,7 +177,7 @@ export async function readLocalSessionFile(
     throw new Error("No valid AI session records found in this file.");
   }
 
-  const stableKey = Buffer.from(resolved).toString("base64url").slice(0, 24);
+  const stableKey = createHash("sha256").update(resolved).digest("base64url").slice(0, 24);
   return {
     ...parsed,
     id: `local-${stableKey}`,

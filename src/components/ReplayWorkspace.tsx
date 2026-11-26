@@ -2,6 +2,7 @@
 
 import { useReplayWorkspace } from "@/src/hooks/useReplayWorkspace";
 import { BoardTab } from "./BoardTab";
+import { CompareTab } from "./CompareTab";
 import { ContextGraphTab } from "./ContextGraphTab";
 import { DiagnosticsTab } from "./DiagnosticsTab";
 import { OverviewTab } from "./OverviewTab";
@@ -19,6 +20,7 @@ export function ReplayWorkspace() {
     activeTab,
     setActiveTab,
     selectedStepId,
+    selectedStepSessionId,
     selectedStep,
     selectStep,
     isInspectorOpen,
@@ -33,9 +35,12 @@ export function ReplayWorkspace() {
     handleFileUpload,
     handleImportSessions,
     handleDeleteSession,
+    handleRenameSession,
     handleRestoreDemos,
     hasDismissedDemos,
+    isHydrated,
     uploadError,
+    compare,
   } = useReplayWorkspace();
 
   const handleJumpToStep = (stepId: string) => {
@@ -52,8 +57,10 @@ export function ReplayWorkspace() {
         onUploadFile={handleFileUpload}
         onImportSessions={handleImportSessions}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
         onRestoreDemos={handleRestoreDemos}
         hasDismissedDemos={hasDismissedDemos}
+        isHydrated={isHydrated}
         uploadError={uploadError}
       />
 
@@ -100,8 +107,31 @@ export function ReplayWorkspace() {
                   onJumpToStep={handleJumpToStep}
                 />
               )}
+              {activeTab === "compare" && (
+                <CompareTab
+                  left={selectedSession}
+                  leftAnalytics={analytics}
+                  right={compare.compareSession}
+                  rightAnalytics={compare.compareAnalytics}
+                  sameTaskCandidates={compare.sameTaskCandidates}
+                  sameProjectCandidates={compare.sameProjectCandidates}
+                  otherCandidates={compare.otherCandidates}
+                  comparison={compare.comparison}
+                  selectedStepId={selectedStepId}
+                  selectedStepSessionId={selectedStepSessionId}
+                  onSelectRightId={compare.setCompareTargetId}
+                  onSwap={compare.swapCompareSessions}
+                  onSelectStep={selectStep}
+                />
+              )}
             </div>
           </>
+        ) : !isHydrated ? (
+          <div className="p-6">
+            <div className="rounded-md border border-[#1e2026] bg-[#111318] p-8 text-center">
+              <p className="text-xs font-mono text-zinc-500">Loading workspace...</p>
+            </div>
+          </div>
         ) : (
           <div className="p-6">
             <div className="rounded-md border border-[#1e2026] bg-[#111318] p-8 text-center flex flex-col items-center gap-3">
