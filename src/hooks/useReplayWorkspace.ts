@@ -7,50 +7,67 @@ import { analyzeSession } from "@/src/lib/analytics/sessionAnalytics";
 import { buildSessionGraph } from "@/src/lib/analytics/sessionGraph";
 import { parseJsonlSession } from "@/src/lib/parsers/jsonlParser";
 import {
-  loadStoredSessionState,
+  loadPersistedSessions,
+  loadStoredMeta,
+  persistImportedSessions,
+  removePersistedSession,
+  saveCustomTitles,
   saveDismissedDemos,
-  saveUploadedSessions,
 } from "@/src/lib/storage/sessionStorage";
 import { NormalizedSession, StepRole } from "@/src/types/session";
+import { useCompareSessions } from "./useCompareSessions";
 
 export type StepFilter = "all" | StepRole | "errors";
 
 export function useReplayWorkspace() {
   const [uploadedSessions, setUploadedSessions] = useState<NormalizedSession[]>([]);
   const [dismissedDemoIds, setDismissedDemoIds] = useState<string[]>([]);
+  const [customTitles, setCustomTitles] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string>(DEMO_SESSIONS[0].id);
   const [activeTab, setActiveTab] = useState<SwarmTab>("overview");
   const [selectedStepId, setSelectedStepId] = useState<string | null>(
     DEMO_SESSIONS[0].steps[0]?.id ?? null
   );
+  const [selectedStepSessionId, setSelectedStepSessionId] = useState<string | null>(null);
   const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(false);
   const [stepFilter, setStepFilter] = useState<StepFilter>("all");
   const [expandedToolIds, setExpandedToolIds] = useState<Record<string, boolean>>({});
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     let active = true;
-    Promise.resolve().then(() => {
-      if (!active) return;
-      const stored = loadStoredSessionState();
-      setUploadedSessions(stored.uploaded);
-      setDismissedDemoIds(stored.dismissedDemoIds);
-      if (stored.uploaded.length > 0) {
-        setSelectedId(stored.uploaded[0].id);
-      } else {
-        const firstDemo = DEMO_SESSIONS.find((d) => !stored.dismissedDemoIds.includes(d.id));
-        setSelectedId(firstDemo?.id ?? "");
+    async function hydrate() {
+      try {
+        const meta = loadStoredMeta();
+        const persisted = await loadPersistedSessions();
+        if (!active) return;
+        setUploadedSessions(persisted);
+        setDismissedDemoIds(meta.dismissedDemoIds);
+        setCustomTitles(meta.customTitles);
+        if (persisted.length > 0) {
+          setSelectedId(persisted[0].id);
+        } else {
+          const firstDemo = DEMO_SESSIONS.find((d) => !meta.dismissedDemoIds.includes(d.id));
+          setSelectedId(firstDemo?.id ?? "");
+        }
+      } finally {
+        if (active) setIsHydrated(true);
       }
-    });
+    }
+    void hydrate();
     return () => {
       active = false;
     };
   }, []);
 
   const sessions = useMemo(() => {
+    if (!isHydrated) return [];
     const activeDemos = DEMO_SESSIONS.filter((d) => !dismissedDemoIds.includes(d.id));
-    return [...uploadedSessions, ...activeDemos];
-  }, [uploadedSessions, dismissedDemoIds]);
+    return [...uploadedSessions, ...activeDemos].map((s) =>
+      customTitles[s.id] ? { ...s, title: customTitles[s.id] } : s
+    );
+  }, [isHydrated, uploadedSessions, dismissedDemoIds, customTitles]);
 
   const selectedSession = useMemo(
     () => sessions.find((s) => s.id === selectedId) ?? sessions[0] ?? null,
@@ -68,26 +85,36 @@ export function useReplayWorkspace() {
     return buildSessionGraph(selectedSession, dupPaths);
   }, [selectedSession, analytics]);
 
-  const activeStepId = useMemo(() => {
-    if (!selectedSession) return null;
-    if (selectedStepId && selectedSession.steps.some((s) => s.id === selectedStepId)) {
-      return selectedStepId;
-    }
-    return selectedSession.steps[0]?.id ?? null;
-  }, [selectedSession, selectedStepId]);
-
-  const selectedStep = useMemo(() => {
-    if (!selectedSession || !activeStepId) return null;
-    return selectedSession.steps.find((s) => s.id === activeStepId) ?? null;
-  }, [selectedSession, activeStepId]);
-
   const selectSession = (id: string) => {
     setSelectedId(id);
     setSelectedStepId(null);
+    setSelectedStepSessionId(null);
   };
 
-  const selectStep = (stepId: string) => {
+  const compare = useCompareSessions(sessions, selectedSession, analytics, selectSession);
+
+  const activeStepSessionId = selectedStepSessionId ?? selectedSession?.id ?? null;
+
+  const activeStepId = useMemo(() => {
+    if (!selectedSession) return null;
+    const targetSession =
+      activeStepSessionId === compare.compareSession?.id ? compare.compareSession : selectedSession;
+    if (selectedStepId && targetSession?.steps.some((s) => s.id === selectedStepId)) {
+      return selectedStepId;
+    }
+    return selectedSession.steps[0]?.id ?? null;
+  }, [selectedSession, compare.compareSession, activeStepSessionId, selectedStepId]);
+
+  const selectedStep = useMemo(() => {
+    if (!selectedSession || !activeStepId) return null;
+    const targetSession =
+      activeStepSessionId === compare.compareSession?.id ? compare.compareSession : selectedSession;
+    return targetSession?.steps.find((s) => s.id === activeStepId) ?? null;
+  }, [selectedSession, compare.compareSession, activeStepSessionId, activeStepId]);
+
+  const selectStep = (stepId: string, sessionId?: string) => {
     setSelectedStepId(stepId);
+    setSelectedStepSessionId(sessionId ?? selectedSession?.id ?? null);
     setIsInspectorOpen(true);
   };
 
@@ -109,14 +136,21 @@ export function useReplayWorkspace() {
   const handleImportSessions = (incoming: NormalizedSession[]) => {
     if (incoming.length === 0) return;
     setUploadError(null);
-    const incomingIds = new Set(incoming.map((s) => s.id));
-    const nextUploaded = [...incoming, ...uploadedSessions.filter((s) => !incomingIds.has(s.id))];
-    setUploadedSessions(nextUploaded);
-    const saved = saveUploadedSessions(nextUploaded);
-    if (!saved) {
-      setUploadError("Session(s) loaded, but browser storage quota is full so some will not persist after reload.");
+    const deduped: NormalizedSession[] = [];
+    const incomingIds = new Set<string>();
+    for (const s of incoming) {
+      if (incomingIds.has(s.id)) continue;
+      incomingIds.add(s.id);
+      deduped.push(s);
     }
-    setSelectedId(incoming[0].id);
+    setUploadedSessions((prev) => [...deduped, ...prev.filter((s) => !incomingIds.has(s.id))]);
+    void persistImportedSessions(deduped).then((saved) => {
+      if (!saved) {
+        setUploadError("Session(s) loaded, but IndexedDB persistence failed.");
+      }
+    });
+    setSelectedId(deduped[0].id);
+    setSelectedStepId(null);
     setStepFilter("all");
   };
 
@@ -150,7 +184,7 @@ export function useReplayWorkspace() {
     if (isUploaded) {
       const nextUploaded = uploadedSessions.filter((s) => s.id !== id);
       setUploadedSessions(nextUploaded);
-      saveUploadedSessions(nextUploaded);
+      void removePersistedSession(id);
       const activeDemos = DEMO_SESSIONS.filter((d) => !dismissedDemoIds.includes(d.id));
       nextSessions = [...nextUploaded, ...activeDemos];
     } else {
@@ -165,6 +199,14 @@ export function useReplayWorkspace() {
       setSelectedId(nextSessions[0]?.id ?? "");
       setStepFilter("all");
     }
+  };
+
+  const handleRenameSession = (id: string, nextTitle: string) => {
+    const trimmed = nextTitle.trim();
+    if (!trimmed) return;
+    const next = { ...customTitles, [id]: trimmed };
+    setCustomTitles(next);
+    saveCustomTitles(next);
   };
 
   const handleRestoreDemos = () => {
@@ -183,6 +225,7 @@ export function useReplayWorkspace() {
     activeTab,
     setActiveTab,
     selectedStepId: activeStepId,
+    selectedStepSessionId: activeStepSessionId,
     selectedStep,
     selectStep,
     isInspectorOpen,
@@ -198,8 +241,11 @@ export function useReplayWorkspace() {
     handleImportSession,
     handleImportSessions,
     handleDeleteSession,
+    handleRenameSession,
     handleRestoreDemos,
     hasDismissedDemos: dismissedDemoIds.length > 0,
+    isHydrated,
     uploadError,
+    compare,
   };
 }

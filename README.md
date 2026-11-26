@@ -17,6 +17,9 @@ Inspect what your coding agents (**Claude Code**, **Codex CLI**, **OpenCode**, *
 ### Context Graph
 ![Context Graph](docs/screenshots/context-graph.png)
 
+### Side-by-Side Session Comparison
+![Side-by-Side Session Comparison](docs/screenshots/compare.png)
+
 ---
 
 ## Why `harness-replay`?
@@ -41,7 +44,8 @@ Modern AI coding harnesses execute dozens of tool calls, read files repeatedly, 
   - **Board:** Filterable step-by-step timeline (`All`, `User`, `Agent`, `Errors`) paired with a collapsible **Step Inspector** for prompts, expandable tool-call arguments/outputs, and distinct `NO RESULT` ("Result not recorded") badges for truncated logs.
   - **Graph:** Interactive step-to-file/tool **Context Graph** highlighting flow, context links, duplicate reads, and tool errors.
   - **Diagnostics:** Full optimization report with one-click jumps to affected steps.
-- **Browser Persistence:** Uploaded sessions, dismissed demos, and plan selections persist locally in `localStorage`.
+  - **Compare:** Side-by-side A/B comparison across harnesses or models with cost/cache/token deltas, token distribution bars, touched file overlap, dual step timelines, and smart `Same task` / `Same project` grouping.
+- **Project Grouping & Persistence:** Sessions are automatically grouped by detected project root in the sidebar, support inline renaming, and persist in browser **IndexedDB** (with `localStorage` for metadata and custom titles) without hitting the 5 MB `localStorage` cap.
 
 ## Getting Started
 
@@ -80,15 +84,15 @@ npm run start
 app/                      # Next.js App Router (layout, page, globals.css, local API routes)
 src/
 ├── types/                # NormalizedSession, SessionStep, ToolCall, and analytics contracts
-├── data/                 # Built-in demo sessions for instant exploration
+├── data/                 # Built-in demo sessions & A/B compare pair for instant exploration
 ├── lib/
 │   ├── parsers/          # Modular .jsonl parsers (Claude Code, Codex CLI, OpenCode, Antigravity)
 │   ├── server/           # Opt-in local filesystem session scanner
-│   ├── analytics/        # Token/cost calculator, 8-rule waste detector, context graph builder
-│   ├── storage/          # Browser localStorage persistence with quota handling
+│   ├── analytics/        # Token/cost calculator, 8-rule waste detector, context graph & A/B comparator
+│   ├── storage/          # Browser IndexedDB session store + localStorage metadata/migration
 │   ├── pricing.ts        # Model token pricing table
 │   └── quota.ts          # 5H / 7D quota impact estimator
-├── hooks/                # Client state hooks (useReplayWorkspace, useLocalSessions)
+├── hooks/                # Client state hooks (useReplayWorkspace, useCompareSessions, useLocalSessions)
 └── components/           # Swarm Mission Control UI & *Styles.ts dictionaries
 ```
 

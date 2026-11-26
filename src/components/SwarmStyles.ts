@@ -25,4 +25,10 @@ export const SWARM_STYLES = {
   filterBtnBase: "px-2.5 py-1 rounded text-xs font-mono transition-colors cursor-pointer",
   filterBtnActive: "bg-zinc-200 text-zinc-950 font-medium",
   filterBtnIdle: "text-zinc-400 hover:text-zinc-200",
+  compareGrid: "grid grid-cols-1 lg:grid-cols-2 gap-4",
+  compareSelect:
+    "rounded border border-[#252830] bg-[#090a0c] px-2.5 py-1 text-xs font-mono text-zinc-200 focus:outline-none focus:border-zinc-500 min-w-0",
+  deltaGood: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  deltaBad: "border-rose-500/30 bg-rose-500/10 text-rose-300",
+  deltaNeutral: "border-[#252830] bg-[#090a0c] text-zinc-400",
 } as const;

@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef } from "react";
-import { Heart, RotateCcw, Terminal, Trash2, Upload } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronRight, FolderGit2, Heart, RotateCcw, Terminal, Upload } from "lucide-react";
+import { groupSessionsByProject } from "@/src/lib/analytics/sessionCompare";
 import { NormalizedSession } from "@/src/types/session";
 import { LocalScannerPanel } from "./LocalScannerPanel";
 import { REPLAY_STYLES } from "./ReplayStyles";
+import { SessionSidebarItem } from "./SessionSidebarItem";
 
 interface SessionSidebarProps {
   sessions: NormalizedSession[];
@@ -13,18 +15,12 @@ interface SessionSidebarProps {
   onUploadFile: (file: File) => void;
   onImportSessions: (sessions: NormalizedSession[]) => void;
   onDeleteSession: (id: string) => void;
+  onRenameSession: (id: string, title: string) => void;
   onRestoreDemos: () => void;
   hasDismissedDemos: boolean;
+  isHydrated: boolean;
   uploadError: string | null;
 }
-
-const HARNESS_LABELS: Record<NormalizedSession["harness"], string> = {
-  antigravity: "Antigravity",
-  "claude-code": "Claude Code",
-  codex: "Codex CLI",
-  opencode: "OpenCode",
-  generic: "JSONL",
-};
 
 export function SessionSidebar({
   sessions,
@@ -33,11 +29,20 @@ export function SessionSidebar({
   onUploadFile,
   onImportSessions,
   onDeleteSession,
+  onRenameSession,
   onRestoreDemos,
   hasDismissedDemos,
+  isHydrated,
   uploadError,
 }: SessionSidebarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [collapsedProjects, setCollapsedProjects] = useState<Record<string, boolean>>({});
+
+  const projectGroups = useMemo(() => groupSessionsByProject(sessions), [sessions]);
+
+  const toggleProject = (project: string) => {
+    setCollapsedProjects((prev) => ({ ...prev, [project]: !prev[project] }));
+  };
 
   return (
     <aside className={REPLAY_STYLES.sidebar}>
@@ -82,9 +87,7 @@ export function SessionSidebar({
           <Upload className="w-3.5 h-3.5 text-zinc-400" />
           <span>Load .jsonl session</span>
         </div>
-        <p className="text-[11px] text-zinc-500 mt-1">
-          Drop file or click to inspect
-        </p>
+        <p className="text-[11px] text-zinc-500 mt-1">Drop file or click to inspect</p>
       </div>
 
       {uploadError && (
@@ -95,8 +98,8 @@ export function SessionSidebar({
 
       <LocalScannerPanel onImportSessions={onImportSessions} />
 
-      <div className="flex flex-col gap-1.5 overflow-y-auto">
-        <div className="flex items-center justify-between px-0.5 pb-1">
+      <div className="flex flex-col gap-2 overflow-y-auto">
+        <div className="flex items-center justify-between px-0.5 pb-0.5">
           <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-500">
             Sessions ({sessions.length})
           </span>
@@ -113,56 +116,46 @@ export function SessionSidebar({
           )}
         </div>
 
-        {sessions.length === 0 ? (
+        {!isHydrated ? (
+          <div className="rounded-md border border-[#222429] bg-[#0b0c0e] p-4 text-center text-xs font-mono text-zinc-500">
+            Loading saved sessions...
+          </div>
+        ) : sessions.length === 0 ? (
           <div className="rounded-md border border-[#222429] bg-[#0b0c0e] p-4 text-center text-xs font-mono text-zinc-500">
             No sessions saved. Load a .jsonl file above.
           </div>
         ) : (
-          sessions.map((session) => {
-            const isActive = session.id === selectedId;
+          projectGroups.map((group) => {
+            const isCollapsed = Boolean(collapsedProjects[group.project]);
             return (
-              <div
-                key={session.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelect(session.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelect(session.id);
-                  }
-                }}
-                className={`group ${REPLAY_STYLES.sessionItemBase} ${
-                  isActive ? REPLAY_STYLES.sessionItemActive : REPLAY_STYLES.sessionItemIdle
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-zinc-200 rounded-r" />
-                )}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
-                    {HARNESS_LABELS[session.harness]}
+              <div key={group.project} className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => toggleProject(group.project)}
+                  className="flex items-center justify-between gap-2 px-1 py-0.5 text-[11px] font-mono text-zinc-400 hover:text-zinc-200 cursor-pointer"
+                >
+                  <span className="inline-flex items-center gap-1.5 min-w-0 truncate">
+                    {isCollapsed ? (
+                      <ChevronRight className="w-3 h-3 shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 shrink-0" />
+                    )}
+                    <FolderGit2 className="w-3 h-3 shrink-0 text-zinc-500" />
+                    <span className="truncate">{group.project}</span>
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-zinc-500 font-mono">
-                      {session.steps.length} steps
-                    </span>
-                    <button
-                      type="button"
-                      aria-label={`Delete ${session.title}`}
-                      title="Remove session"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteSession(session.id);
-                      }}
-                      className="p-1.5 rounded border border-[#272a32] bg-[#14161b] text-zinc-400 hover:text-rose-300 hover:border-rose-500/40 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs font-medium text-zinc-100 line-clamp-1">{session.title}</p>
-                <p className="text-[11px] text-zinc-500 font-mono truncate">{session.model}</p>
+                  <span className="text-[10px] text-zinc-500">{group.sessions.length}</span>
+                </button>
+                {!isCollapsed &&
+                  group.sessions.map((session) => (
+                    <SessionSidebarItem
+                      key={session.id}
+                      session={session}
+                      isActive={session.id === selectedId}
+                      onSelect={onSelect}
+                      onRename={onRenameSession}
+                      onDelete={onDeleteSession}
+                    />
+                  ))}
               </div>
             );
           })
