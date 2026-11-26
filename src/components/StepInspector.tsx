@@ -115,10 +115,12 @@ export function StepInspector({
                         className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono ${
                           tool.status === "error"
                             ? "bg-rose-500/15 text-rose-400"
+                            : tool.status === "pending"
+                            ? "bg-amber-500/15 text-amber-300"
                             : "text-zinc-500"
                         }`}
                       >
-                        {tool.status === "error" ? "ERR" : "OK"}
+                        {tool.status === "error" ? "ERR" : tool.status === "pending" ? "NO RESULT" : "OK"}
                       </span>
                     </button>
 
@@ -127,10 +129,16 @@ export function StepInspector({
                         <pre className="overflow-x-auto whitespace-pre-wrap text-zinc-400">
                           {tool.argumentsPreview}
                         </pre>
-                        {tool.outputPreview && (
+                        {tool.outputPreview ? (
                           <div className="rounded bg-[#111318] border border-[#1e2026] p-2 text-zinc-300 whitespace-pre-wrap break-words">
                             {tool.outputPreview}
                           </div>
+                        ) : (
+                          tool.status === "pending" && (
+                            <div className="rounded bg-amber-500/10 border border-amber-500/20 p-2 text-amber-300/90">
+                              Result not recorded (log ended before tool output was captured).
+                            </div>
+                          )
                         )}
                       </div>
                     )}

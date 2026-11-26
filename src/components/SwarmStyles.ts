@@ -14,7 +14,7 @@ export const SWARM_STYLES = {
   statPill:
     "inline-flex items-center gap-1.5 rounded border border-[#1e2026] bg-[#111318] px-2.5 py-1 text-[11px] font-mono text-zinc-300",
   badge:
-    "inline-flex items-center rounded border border-[#252830] bg-[#090a0c] px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-zinc-400",
+    "inline-flex items-center shrink-0 whitespace-nowrap rounded border border-[#252830] bg-[#090a0c] px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-zinc-400",
   kpiGrid:
     "grid grid-cols-2 lg:grid-cols-4 border border-[#1e2026] rounded-md bg-[#111318] divide-y lg:divide-y-0 lg:divide-x divide-[#1e2026] overflow-hidden",
   kpiCell: "p-3.5 flex flex-col gap-1",

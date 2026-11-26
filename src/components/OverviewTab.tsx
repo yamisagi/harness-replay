@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Target } from "lucide-react";
+import { formatUsd } from "@/src/lib/pricing";
 import { NormalizedSession, SessionAnalytics } from "@/src/types/session";
 import { QuotaImpactCard } from "./QuotaImpactCard";
 import { SwarmTab } from "./SwarmHeader";
@@ -85,13 +86,13 @@ export function OverviewTab({ session, analytics, onNavigateTab }: OverviewTabPr
         <div className={SWARM_STYLES.kpiCell}>
           <span className={SWARM_STYLES.kpiLabel}>Cache Savings</span>
           <span className={`${SWARM_STYLES.kpiValue} text-emerald-400`}>
-            ${analytics.estimatedSavingsUsd.toFixed(3)}
+            {formatUsd(analytics.estimatedSavingsUsd)}
           </span>
           <span className={SWARM_STYLES.kpiSub}>Saved vs uncached</span>
         </div>
         <div className={SWARM_STYLES.kpiCell}>
           <span className={SWARM_STYLES.kpiLabel}>Estimated Cost</span>
-          <span className={SWARM_STYLES.kpiValue}>${analytics.estimatedCostUsd.toFixed(3)}</span>
+          <span className={SWARM_STYLES.kpiValue}>{formatUsd(analytics.estimatedCostUsd)}</span>
           <span className={`${SWARM_STYLES.kpiSub} ${analytics.errorCount > 0 ? "text-rose-400" : ""}`}>
             {analytics.errorCount > 0 ? `${analytics.errorCount} failed tool(s)` : "0 errors"}
           </span>

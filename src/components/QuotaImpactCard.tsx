@@ -26,6 +26,10 @@ function fmtPct(pct: number): string {
   return pct < 0.1 && pct > 0 ? "<0.1" : pct.toFixed(1);
 }
 
+function fmtSaved(pct: number): string {
+  return pct >= 100 ? `${(pct / 100).toFixed(1)}x` : `${fmtPct(pct)}%`;
+}
+
 const subscribeNoop = () => () => {};
 
 export function QuotaImpactCard({ session, analytics }: QuotaImpactCardProps) {
@@ -111,8 +115,8 @@ export function QuotaImpactCard({ session, analytics }: QuotaImpactCardProps) {
           {showCacheNote && (
             <p className="text-emerald-400/90">
               Prompt cache saved{" "}
-              {impact.cacheSaved5hPct !== null ? `~${fmtPct(impact.cacheSaved5hPct)}% of 5H (` : ""}
-              ~{fmtPct(impact.cacheSaved7dPct)}% of 7D{impact.cacheSaved5hPct !== null ? ")" : ""}.
+              {impact.cacheSaved5hPct !== null ? `~${fmtSaved(impact.cacheSaved5hPct)} of 5H (` : ""}
+              ~{fmtSaved(impact.cacheSaved7dPct)} of 7D{impact.cacheSaved5hPct !== null ? ")" : ""}.
             </p>
           )}
           {impact.whatIf && (
@@ -125,6 +129,10 @@ export function QuotaImpactCard({ session, analytics }: QuotaImpactCardProps) {
           )}
         </div>
       )}
+
+      <p className="text-[10px] font-mono text-zinc-500 pt-1 border-t border-[#1e2026]/80">
+        Rough estimate from API token pricing; actual quota may vary by time of day and server load.
+      </p>
     </div>
   );
 }
