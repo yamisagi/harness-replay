@@ -133,12 +133,14 @@ export function StepInspector({
                           <div className="rounded bg-[#111318] border border-[#1e2026] p-2 text-zinc-300 whitespace-pre-wrap break-words">
                             {tool.outputPreview}
                           </div>
+                        ) : tool.status === "pending" ? (
+                          <div className="rounded bg-amber-500/10 border border-amber-500/20 p-2 text-amber-300/90">
+                            Result not recorded (log ended before tool output was captured).
+                          </div>
                         ) : (
-                          tool.status === "pending" && (
-                            <div className="rounded bg-amber-500/10 border border-amber-500/20 p-2 text-amber-300/90">
-                              Result not recorded (log ended before tool output was captured).
-                            </div>
-                          )
+                          <div className="rounded bg-[#111318] border border-[#1e2026] p-2 text-zinc-500">
+                            Completed with no output.
+                          </div>
                         )}
                       </div>
                     )}

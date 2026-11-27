@@ -76,6 +76,14 @@ function collectToolResults(
   return resultMap;
 }
 
+function markRemainingPending(pendingCalls: ToolCallRecord[], cursor: number): void {
+  for (let j = cursor; j < pendingCalls.length; j += 1) {
+    if (pendingCalls[j].status === "success" && !pendingCalls[j].outputPreview) {
+      pendingCalls[j].status = "pending";
+    }
+  }
+}
+
 function reconcileAntigravityResults(records: RawJsonRecord[], steps: SessionStep[]): void {
   let pendingCalls: ToolCallRecord[] = [];
   let cursor = 0;
@@ -85,6 +93,7 @@ function reconcileAntigravityResults(records: RawJsonRecord[], steps: SessionSte
     if (!isAntigravityRecord(rec)) continue;
 
     if (rec.type === "PLANNER_RESPONSE" || Array.isArray(rec.tool_calls)) {
+      markRemainingPending(pendingCalls, cursor);
       pendingCalls = steps[i]?.toolCalls ?? [];
       cursor = 0;
     } else if (rec.type === "GENERIC" && cursor < pendingCalls.length) {
@@ -102,40 +111,31 @@ function reconcileAntigravityResults(records: RawJsonRecord[], steps: SessionSte
         if (out) tool.outputPreview = out.slice(0, 400);
       }
     } else if (rec.type === "USER_INPUT") {
+      markRemainingPending(pendingCalls, cursor);
       pendingCalls = [];
       cursor = 0;
     }
   }
 
-  for (let j = cursor; j < pendingCalls.length; j += 1) {
-    if (pendingCalls[j].status === "success" && !pendingCalls[j].outputPreview) {
-      pendingCalls[j].status = "pending";
-    }
-  }
+  markRemainingPending(pendingCalls, cursor);
 }
 
 function reconcileToolCallStatuses(records: RawJsonRecord[], steps: SessionStep[]): void {
   reconcileAntigravityResults(records, steps);
   const resultMap = collectToolResults(records);
-  const hasExplicitResults = resultMap.size > 0;
 
-  for (const step of steps) {
-    for (const tool of step.toolCalls) {
+  for (let i = 0; i < steps.length; i += 1) {
+    const rec = records[i] as Record<string, unknown>;
+    if (isAntigravityRecord(rec) || isOpenCodeRecord(rec)) continue;
+
+    for (const tool of steps[i].toolCalls) {
       const res = resultMap.get(tool.id);
       if (res) {
         tool.status = res.isError ? "error" : "success";
         if (!tool.outputPreview && res.outputPreview) tool.outputPreview = res.outputPreview;
-      } else if (hasExplicitResults && tool.status !== "error" && !tool.outputPreview) {
+      } else if (tool.status !== "error" && !tool.outputPreview) {
         tool.status = "pending";
       }
-    }
-  }
-
-  const lastStep = steps[steps.length - 1];
-  if (!lastStep) return;
-  for (const tool of lastStep.toolCalls) {
-    if (tool.status === "success" && !tool.outputPreview && !resultMap.has(tool.id)) {
-      tool.status = "pending";
     }
   }
 }

@@ -129,7 +129,7 @@ export function BoardTab({
                 <button
                   type="button"
                   onClick={() => onSelectStep(step.id)}
-                  className={`relative w-full text-left rounded-md border px-3.5 py-2.5 flex items-center justify-between gap-3 transition-colors cursor-pointer ${
+                  className={`relative w-full text-left rounded-md border px-3.5 py-2.5 flex flex-col gap-1.5 transition-colors cursor-pointer ${
                     isSelected
                       ? "border-zinc-500 bg-[#151820]"
                       : "border-[#1e2026] bg-[#111318] hover:border-[#323640]"
@@ -138,54 +138,70 @@ export function BoardTab({
                   {isSelected && (
                     <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-emerald-400 rounded-r" />
                   )}
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-xs text-zinc-500 shrink-0">
-                      #{String(step.index).padStart(2, "0")}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded font-mono text-[10px] uppercase tracking-wider shrink-0 ${
-                        isUser
-                          ? "bg-zinc-800 text-zinc-200"
-                          : "bg-[#191c23] text-zinc-300 border border-[#252830]"
-                      }`}
-                    >
-                      {ROLE_LABELS[step.role]}
-                    </span>
-                    <span className="text-xs text-zinc-200 truncate">{step.summary}</span>
-                    {step.toolCalls.length > 0 && (
-                      <span className="hidden md:inline text-[10px] font-mono text-zinc-500 shrink-0">
-                        [{step.toolCalls.map((t) => t.name).slice(0, 2).join(", ")}
-                        {step.toolCalls.length > 2 ? ` +${step.toolCalls.length - 2}` : ""}]
+                  <div className="flex items-center justify-between gap-3 w-full min-w-0">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+                      <span className="font-mono text-xs text-zinc-500 shrink-0">
+                        #{String(step.index).padStart(2, "0")}
                       </span>
-                    )}
-                    {hasError && (
-                      <span className="text-[10px] font-mono text-rose-400 uppercase shrink-0">ERR</span>
-                    )}
-                    {hasPending && (
-                      <span className="text-[10px] font-mono text-amber-300 uppercase shrink-0">NO RESULT</span>
-                    )}
+                      <span
+                        className={`px-1.5 py-0.5 rounded font-mono text-[10px] uppercase tracking-wider shrink-0 ${
+                          isUser
+                            ? "bg-zinc-800 text-zinc-200"
+                            : "bg-[#191c23] text-zinc-300 border border-[#252830]"
+                        }`}
+                      >
+                        {ROLE_LABELS[step.role]}
+                      </span>
+                      <span className="text-xs text-zinc-200 truncate min-w-0">{step.summary}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 font-mono text-[11px] shrink-0">
+                      {hasError && (
+                        <span className="px-1.5 py-0.5 rounded bg-rose-500/15 text-[10px] text-rose-400 uppercase shrink-0">
+                          ERR
+                        </span>
+                      )}
+                      {hasPending && (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-[10px] text-amber-300 uppercase shrink-0">
+                          NO RESULT
+                        </span>
+                      )}
+                      {totalStepTokens > 0 && (
+                        <>
+                          <div className="hidden sm:block w-14 h-1.5 rounded-xs bg-[#1c1f26] overflow-hidden">
+                            <div className={`h-full ${hasError ? "bg-rose-400" : "bg-zinc-300"}`} style={{ width: `${barWidth}%` }} />
+                          </div>
+                          <span className="text-zinc-300 text-right tabular-nums">
+                            {totalStepTokens.toLocaleString("en-US")} tok
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 font-mono text-[11px] shrink-0">
-                    {step.durationMs !== undefined && (
-                      <span className="hidden sm:inline text-zinc-500">
-                        {(step.durationMs / 1000).toFixed(2)}s
+                  {(step.toolCalls.length > 0 ||
+                    step.durationMs !== undefined ||
+                    step.usage.cacheReadTokens > 0) && (
+                    <div className="flex items-center justify-between gap-2 w-full min-w-0 text-[10px] font-mono text-zinc-500">
+                      <span className="truncate min-w-0">
+                        {step.toolCalls.length > 0
+                          ? `[${step.toolCalls.map((t) => t.name).slice(0, 2).join(", ")}${
+                              step.toolCalls.length > 2 ? ` +${step.toolCalls.length - 2}` : ""
+                            }]`
+                          : ""}
                       </span>
-                    )}
-                    {step.usage.cacheReadTokens > 0 && (
-                      <span className="hidden md:inline text-emerald-400">
-                        +{step.usage.cacheReadTokens.toLocaleString("en-US")} cache
-                      </span>
-                    )}
-                    {totalStepTokens > 0 && (
-                      <>
-                        <div className="hidden sm:block w-14 h-1.5 rounded-xs bg-[#1c1f26] overflow-hidden">
-                          <div className={`h-full ${hasError ? "bg-rose-400" : "bg-zinc-300"}`} style={{ width: `${barWidth}%` }} />
-                        </div>
-                        <span className="text-zinc-300 w-16 text-right">{totalStepTokens.toLocaleString("en-US")} tok</span>
-                      </>
-                    )}
-                  </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {step.durationMs !== undefined && (
+                          <span>{(step.durationMs / 1000).toFixed(2)}s</span>
+                        )}
+                        {step.usage.cacheReadTokens > 0 && (
+                          <span className="text-emerald-400">
+                            +{step.usage.cacheReadTokens.toLocaleString("en-US")} cache
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </button>
               </div>
             );
